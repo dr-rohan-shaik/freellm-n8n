@@ -1,0 +1,97 @@
+{
+  "name": "FreeLLM Basic Chat",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "freellm-gpt-4o",
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 2000
+        }
+      },
+      "id": "2",
+      "name": "FreeLLM Chat Model",
+      "type": "@n8n/nodes-freellm.freeLlmChatModel",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "credentials": {
+        "freeLlmApi": "FreeLLM Account"
+      }
+    },
+    {
+      "parameters": {
+        "prompt": "You are a helpful assistant. Answer the user's question.",
+        "options": {}
+      },
+      "id": "3",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "inputs": [
+        {
+          "node": "2",
+          "output": "Model",
+          "type": "ai_languageModel"
+        }
+      ]
+    },
+    {
+      "parameters": {
+        "question": "What is FreeLLM and how does it work?"
+      },
+      "id": "4",
+      "name": "Question",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [250, 100],
+      "executeOnce: true
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FreeLLM Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

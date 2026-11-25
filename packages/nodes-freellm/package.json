@@ -1,0 +1,48 @@
+{
+  "name": "@n8n/nodes-freellm",
+  "version": "1.0.0",
+  "description": "FreeLLM nodes for n8n - Chat models, agents, and embeddings",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint . --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "n8n",
+    "n8n-nodes",
+    "freellm",
+    "llm",
+    "ai",
+    "chat",
+    "agent",
+    "embeddings"
+  ],
+  "author": "FreeLLM Team",
+  "license": "MIT",
+  "n8n": {
+    "nodes": [
+      "nodes/FreeLlmChatModel/FreeLlmChatModel.node.ts",
+      "nodes/FreeLlmAgent/FreeLlmAgent.node.ts",
+      "nodes/FreeLlmEmbeddings/FreeLlmEmbeddings.node.ts"
+    ],
+    "credentials": [
+      "credentials/FreeLlmApi.credentials.ts"
+    ]
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*",
+    "@langchain/openai": "*",
+    "@n8n/ai-utilities": "*"
+  },
+  "devDependencies": {
+    "n8n-workflow": "workspace:*",
+    "@langchain/openai": "^0.3.0",
+    "@n8n/ai-utilities": "workspace:*",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.56.0"
+  }
+}

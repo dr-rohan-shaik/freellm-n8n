@@ -1,0 +1,165 @@
+{
+  "name": "FreeLLM RAG Pipeline",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "freellm-gpt-4o",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 3000
+        }
+      },
+      "id": "2",
+      "name": "FreeLLM Chat Model",
+      "type": "@n8n/nodes-freellm.freeLlmChatModel",
+      "typeVersion": 1,
+      "position": [500, 100],
+      "credentials": {
+        "freeLlmApi": "FreeLLM Account"
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "3",
+      "name": "FreeLLM Embeddings",
+      "type": "@n8n/nodes-freellm.freeLlmEmbeddings",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "credentials": {
+        "freeLlmApi": "FreeLLM Account"
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "options": {}
+      },
+      "id": "4",
+      "name": "Vector Store Search",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "credentials": {
+        "qdrantApi": "Qdrant Account"
+      },
+      "inputs": [
+        {
+          "node": "3",
+          "output": "Embeddings",
+          "type": "ai_embedding"
+        }
+      ]
+    },
+    {
+      "parameters": {
+        "prompt": "Answer the question using only the provided context. If the answer is not in the context, say you don't know.\n\nContext: {{ $json.context }}\n\nQuestion: {{ $json.question }}",
+        "options": {}
+      },
+      "id": "5",
+      "name": "RAG Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1,
+      "position": [750, 100],
+      "inputs": [
+        {
+          "node": "2",
+          "output": "Model",
+          "type": "ai_languageModel"
+        },
+        {
+          "node": "4",
+          "output": "Documents",
+          "type": "ai_document"
+        }
+      ]
+    },
+    {
+      "parameters": {
+        "question": "What is the refund policy?",
+        "topK": 5
+      },
+      "id": "6",
+      "name": "Question Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [250, 100],
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Question Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question Input": {
+      "main": [
+        [
+          {
+            "node": "Vector Store Search",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RAG Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FreeLLM Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "RAG Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FreeLLM Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store Search",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Search": {
+      "ai_document": [
+        [
+          {
+            "node": "RAG Chain",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

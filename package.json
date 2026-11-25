@@ -1,0 +1,27 @@
+{
+  "name": "freellm-n8n",
+  "version": "1.0.0",
+  "description": "n8n with FreeLLM integration - Use any LLM model through FreeLLM API",
+  "private": true,
+  "scripts": {
+    "install:all": "pnpm install --recursive",
+    "build": "pnpm --filter @n8n/nodes-freellm build",
+    "dev": "pnpm --filter @n8n/nodes-freellm dev",
+    "test": "pnpm --filter @n8n/nodes-freellm test",
+    "lint": "pnpm --filter @n8n/nodes-freellm lint"
+  },
+  "keywords": [
+    "n8n",
+    "freellm",
+    "llm",
+    "ai",
+    "automation",
+    "workflow"
+  ],
+  "author": "FreeLLM Team",
+  "license": "MIT",
+  "devDependencies": {
+    "pnpm": "^9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

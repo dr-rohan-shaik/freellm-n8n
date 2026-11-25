@@ -1,0 +1,269 @@
+{
+  "name": "FreeLLM Multi-Model Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "freellm-gpt-4o",
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 4000
+        },
+        "systemPrompt": "You are a coding assistant. Write clean, well-documented code. Use the tools available to complete tasks."
+      },
+      "id": "2",
+      "name": "FreeLLM Agent (GPT-4o)",
+      "type": "@n8n/nodes-freellm.freeLlmAgent",
+      "typeVersion": 1,
+      "position": [500, 100],
+      "credentials": {
+        "freeLlmApi": "FreeLLM Account"
+      }
+    },
+    {
+      "parameters": {
+        "model": "freellm-claude-3.5-sonnet",
+        "options": {
+          "temperature": 0.5,
+          "maxTokens": 4000
+        },
+        "systemPrompt": "You are a code reviewer. Analyze code for bugs, security issues, and best practices. Provide constructive feedback."
+      },
+      "id": "3",
+      "name": "FreeLLM Agent (Claude)",
+      "type": "@n8n/nodes-freellm.freeLlmAgent",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "credentials": {
+        "freeLlmApi": "FreeLLM Account"
+      }
+    },
+    {
+      "parameters": {
+        "model": "freellm-llama-3.1-8b",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 2000
+        },
+        "systemPrompt": "You are a fast code generator. Write concise, functional code quickly."
+      },
+      "id": "4",
+      "name": "FreeLLM Agent (Llama Fast)",
+      "type": "@n8n/nodes-freellm.freeLlmAgent",
+      "typeVersion": 1,
+      "position": [500, 500],
+      "credentials": {
+        "freeLlmApi": "FreeLLM Account"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.taskType }}",
+              "operation": "equal",
+              "value2": "code"
+            }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Route: Code Task",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.taskType }}",
+              "operation": "equal",
+              "value2": "review"
+            }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "Route: Review Task",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.taskType }}",
+              "operation": "equal",
+              "value2": "fast"
+            }
+          ]
+        }
+      },
+      "id": "7",
+      "name": "Route: Fast Task",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 500]
+    },
+    {
+      "parameters": {
+        "taskType": "code",
+        "prompt": "Create a Python function that calculates fibonacci numbers with memoization"
+      },
+      "id": "8",
+      "name": "Task Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [250, 100],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { response: $json.output, model: 'gpt-4o' } }];"
+      },
+      "id": "9",
+      "name": "Format GPT-4o Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1000, 100]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { response: $json.output, model: 'claude-3.5-sonnet' } }];"
+      },
+      "id": "10",
+      "name": "Format Claude Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { response: $json.output, model: 'llama-3.1-8b' } }];"
+      },
+      "id": "11",
+      "name": "Format Llama Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1000, 500]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Task Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Input": {
+      "main": [
+        [
+          {
+            "node": "FreeLLM Agent (GPT-4o)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FreeLLM Agent (Claude)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FreeLLM Agent (Llama Fast)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FreeLLM Agent (GPT-4o)": {
+      "main": [
+        [
+          {
+            "node": "Route: Code Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FreeLLM Agent (Claude)": {
+      "main": [
+        [
+          {
+            "node": "Route: Review Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FreeLLM Agent (Llama Fast)": {
+      "main": [
+        [
+          {
+            "node": "Route: Fast Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route: Code Task": {
+      "main": [
+        [
+          {
+            "node": "Format GPT-4o Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Route: Review Task": {
+      "main": [
+        [
+          {
+            "node": "Format Claude Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Route: Fast Task": {
+      "main": [
+        [
+          {
+            "node": "Format Llama Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}
