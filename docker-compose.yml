@@ -1,7 +1,40 @@
 version: '3.8'
 
 services:
-  freellm-n8n:
+  # FreeLLMAPI - Self-hosted LLM Gateway (tashfeenahmed/freellmapi)
+  freellmapi:
+    image: ghcr.io/tashfeenahmed/freellmapi:latest
+    container_name: freellmapi
+    ports:
+      - "3000:3000"
+    environment:
+      # Database
+      - DATABASE_URL=file:/data/db.sqlite
+      # Security - CHANGE IN PRODUCTION!
+      - ENCRYPTION_KEY=${FREELLM_ENCRYPTION_KEY:-your-32-char-encryption-key}
+      - JWT_SECRET=${FREELLM_JWT_SECRET:-your-32-char-jwt-secret}
+      # Dashboard
+      - DASHBOARD_ORIGINS=http://localhost:5173,http://localhost:3000
+      # CORS for n8n
+      - ALLOWED_HOSTS=*
+      # Optional: Trust proxy if behind reverse proxy
+      # - TRUST_PROXY=true
+      # Optional: Rate limiting
+      - PROXY_RATE_LIMIT_RPM=100
+      # Optional: Request body limit for vision
+      - REQUEST_BODY_LIMIT_MB=25
+    volumes:
+      - freellmapi_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # n8n with FreeLLM nodes
+  n8n:
     build:
       context: .
       dockerfile: Dockerfile
@@ -20,24 +53,27 @@ services:
       - DB_TYPE=sqlite
       - DB_SQLITE_DATABASE=/home/node/.n8n/database.sqlite
       
-      # FreeLLM configuration (optional - can also be set in n8n UI)
-      - FREELLM_API_URL=https://api.freellm.com/v1
-      - FREELLM_DEFAULT_MODEL=freellm-gpt-4o
+      # FreeLLM configuration (pre-fill for convenience)
+      - FREELLM_API_URL=http://freellmapi:3000/v1
+      - FREELLM_DEFAULT_MODEL=gpt-4o
       
-      # Security
+      # Security - CHANGE IN PRODUCTION!
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-your-encryption-key-change-in-production}
       - N8N_USER_MANAGEMENT_JWT_SECRET=${N8N_USER_MANAGEMENT_JWT_SECRET:-your-jwt-secret-change-in-production}
       
       # Optional: Enable metrics
       - N8N_DIAGNOSTICS_ENABLED=false
       
-      # Optional: Custom nodes path
+      # Custom nodes path
       - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
       
     volumes:
       - n8n_data:/home/node/.n8n
       - ./packages/nodes-freellm:/home/node/.n8n/custom/nodes-freellm:ro
       
+    depends_on:
+      freellmapi:
+        condition: service_healthy
     restart: unless-stopped
     
     healthcheck:
@@ -47,24 +83,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Optional: PostgreSQL for production
-  # postgres:
-  #   image: postgres:16-alpine
-  #   container_name: freellm-n8n-postgres
-  #   environment:
-  #     - POSTGRES_DB=n8n
-  #     - POSTGRES_USER=n8n
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change-me}
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U n8n"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-
-  # Optional: Qdrant for vector storage (RAG)
+  # Qdrant for vector storage (RAG)
   qdrant:
     image: qdrant/qdrant:latest
     container_name: freellm-n8n-qdrant
@@ -83,4 +102,4 @@ services:
 volumes:
   n8n_data:
   qdrant_data:
-  # postgres_data:
+  freellmapi_data:

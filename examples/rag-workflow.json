@@ -11,7 +11,7 @@
     },
     {
       "parameters": {
-        "model": "freellm-gpt-4o",
+        "model": "gpt-4o",
         "options": {
           "temperature": 0.3,
           "maxTokens": 3000

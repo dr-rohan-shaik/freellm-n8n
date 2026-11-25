@@ -9,9 +9,9 @@ import type {
 export class FreeLlmApi implements ICredentialType {
 	name = 'freeLlmApi';
 
-	displayName = 'FreeLLM';
+	displayName = 'FreeLLM API (Self-Hosted)';
 
-	documentationUrl = 'https://freellm.com/docs';
+	documentationUrl = 'https://github.com/tashfeenahmed/freellmapi';
 
 	icon: Icon = {
 		light: 'file:icons/freellm.svg',
@@ -24,8 +24,8 @@ export class FreeLlmApi implements ICredentialType {
 			name: 'url',
 			type: 'string',
 			required: true,
-			default: 'https://api.freellm.com/v1',
-			description: 'The root URL of the FreeLLM API. n8n adds paths like /chat/completions automatically.',
+			default: 'http://localhost:3000/v1',
+			description: 'The base URL of your self-hosted FreeLLM API instance (e.g., http://localhost:3000/v1 or https://your-domain.com/v1). Must include /v1 suffix.',
 		},
 		{
 			displayName: 'API Key',
@@ -34,21 +34,14 @@ export class FreeLlmApi implements ICredentialType {
 			typeOptions: { password: true },
 			required: true,
 			default: '',
-			description: 'Your FreeLLM API key. Get one at https://freellm.com/api-keys',
+			description: 'Your FreeLLM unified API key. Create one in the FreeLLM dashboard at /settings or /api/keys.',
 		},
 		{
 			displayName: 'Default Model',
 			name: 'defaultModel',
 			type: 'string',
-			default: 'freellm-gpt-4o',
-			description: 'The default model to use when none is specified in the node.',
-		},
-		{
-			displayName: 'Organization ID (optional)',
-			name: 'organizationId',
-			type: 'string',
-			default: '',
-			description: 'Only required if you belong to multiple organizations.',
+			default: 'gpt-4o',
+			description: 'The default model to use when none is specified in the node. Model IDs come from your FreeLLM catalog (e.g., gpt-4o, claude-3.5-sonnet, llama-3.1-70b).',
 		},
 		{
 			displayName: 'Add Custom Headers',
@@ -57,7 +50,7 @@ export class FreeLlmApi implements ICredentialType {
 			typeOptions: { multipleValues: true },
 			placeholder: 'Add Header',
 			default: {},
-			description: 'Additional headers to send with every request.',
+			description: 'Additional headers to send with every request (e.g., for routing or tracking).',
 			options: [
 				{
 					displayName: 'Header',
@@ -94,10 +87,6 @@ export class FreeLlmApi implements ICredentialType {
 		requestOptions.headers ??= {};
 
 		requestOptions.headers['Authorization'] = `Bearer ${credentials.apiKey}`;
-
-		if (credentials.organizationId) {
-			requestOptions.headers['FreeLLM-Organization'] = credentials.organizationId as string;
-		}
 
 		if (credentials.customHeaders?.headers) {
 			for (const header of credentials.customHeaders.headers) {
